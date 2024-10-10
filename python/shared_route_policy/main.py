@@ -2,10 +2,15 @@
 import ncs
 from ncs.application import Service
 
+class BasicServiceCallbacks(Service):
+    # The create() callback is invoked inside NCS FASTMAP and
+    # must always exist.
+    @Service.create
+    def cb_create(self, tctx, root, service, proplist):
+        self.log.info('Service create(service=', service._path, ')')
+        policy=root.devices.device[service.device].config.route_policy.create(service.policy)
+        policy.value = ''.join(service.chunk)
 
-# ------------------------
-# SERVICE CALLBACK EXAMPLE
-# ------------------------
 
 def policy_if_statement(match,set):
     return (
@@ -13,7 +18,6 @@ f'''  if community matches-any ({match}) then\r
     set extcommunity rt ({set}) additive\r
   endif\r
 ''' )
-
 
 class ServiceCallbacks(Service):
 
@@ -59,6 +63,7 @@ class Main(ncs.application.Application):
         # Service callbacks require a registration for a 'service point',
         # as specified in the corresponding data model.
         #
+        self.register_service('basic-shared-route-policy-servicepoint', BasicServiceCallbacks)
         self.register_service('shared-route-policy-servicepoint', ServiceCallbacks)
 
         # If we registered any callback(s) above, the Application class

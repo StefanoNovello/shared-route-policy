@@ -1,18 +1,10 @@
-<config-template xmlns="http://tail-f.com/ns/config/1.0">
-  <devices xmlns="http://tail-f.com/ns/ncs">
-    <device>
-      <!--
-          Select the devices from some data structure in the service
-          model. In this skeleton the devices are specified in a leaf-list.
-          Select all devices in that leaf-list:
-      -->
-      <name>{/device}</name>
-      <config>
-        <route-policy xmlns="http://tail-f.com/ned/cisco-ios-xr">
-          <name>VRF-shared-1-EXP-RPL</name>
-          <value>{$POLICY}</value>
-        </route-policy>
-      </config>
-    </device>
-  </devices>
+<config-template xmlns="http://tail-f.com/ns/config/1.0" servicepoint='shared-route-policy-servicepoint'>
+    <basic-shared-policy xmlns="http://example.com/shared-route-policy">
+      <device>{/device}</device>
+      <policy>VRF-shared-1-EXP-RPL</policy>
+      <chunk>  if community matches-any ({/match}) then&#13;
+    set extcommunity rt ({/set}) additive&#13;
+  endif&#13;
+</chunk>
+    </basic-shared-policy>
 </config-template>

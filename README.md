@@ -1,50 +1,90 @@
 # shared-route-policy
-An NSO service package to manage a route-policy that is being used by many service instances
+An NSO service package to manage a route-policy that is being used by many service instances. The package exposes 2 services
+basic-shared-policy which manages the underlying policy by concatenating chunks of policy
+
+shared-route-policy whose template is in terms of basic-route-policy and whose intent is to add a if-match-set statement into a speciffic route policy.
 
 Tested on IOS-XR
 
-For a service like this
+This is the first service created.
 ```
-admin@ncs(config)# show full-configuration shared-route-policy
-shared-route-policy alwaysoniosxr
- match-set 123:456
-  set 333:444
- !
- match-set 2:2
-  set 3:3
- !
-!
+admin@ncs(config)# shared-route-policy alwaysoniosxr 11:11 set 22:22
+admin@ncs(config-shared-route-policy-alwaysoniosxr/11:11)# commit dry-run outformat native
+native {
+    device {
+        name alwaysoniosxr
+        data route-policy VRF-shared-1-EXP-RPL
+               if community matches-any (11:11) then
+                 set extcommunity rt (22:22) additive
+               endif
+              end-policy
+             !
+    }
+}
+admin@ncs(config-shared-route-policy-alwaysoniosxr/11:11)# commit
+Commit complete.
+'''
+Then if we add a second service we see how the policy is concatenated, and we see how it has added an extra 'chunk' into the existing basic-shared-policy
+'''
+admin@ncs(config-shared-route-policy-alwaysoniosxr/11:11)# shared-route-policy alwaysoniosxr 33:33 set 44:44
+admin@ncs(config-shared-route-policy-alwaysoniosxr/33:33)# commit dry-run
+cli {
+    local-node {
+        data +basic-shared-policy alwaysoniosxr VRF-shared-1-EXP-RPL {
+             +    chunk [ "  if community matches-any (11:11) then\r\n    set extcommunity rt (22:22) additive\r\n  endif\r\n" "  if community matches-any (33:33) then\r\n    set extcommunity rt (44:44) additive\r\n  endif\r\n" ];
+             +}
+             +shared-route-policy alwaysoniosxr 11:11 {
+             +    set 22:22;
+             +}
+             +shared-route-policy alwaysoniosxr 33:33 {
+             +    set 44:44;
+             +}
+              devices {
+                  device alwaysoniosxr {
+                      config {
+             +            route-policy VRF-shared-1-EXP-RPL {
+             +                value "  if community matches-any (11:11) then\r\n    set extcommunity rt (22:22) additive\r\n  endif\r\n  if community matches-any (33:33) then\r\n    set extcommunity rt (44:44) additive\r\n  endif\r\n";
+             +            }
+                      }
+                  }
+              }
+    }
+}
+admin@ncs(config-shared-route-policy-alwaysoniosxr/33:33)# commit dry-run outformat native
+native {
+    device {
+        name alwaysoniosxr
+        data route-policy VRF-shared-1-EXP-RPL
+               if community matches-any (11:11) then
+                 set extcommunity rt (22:22) additive
+               endif
+               if community matches-any (33:33) then
+                 set extcommunity rt (44:44) additive
+               endif
+              end-policy
+             !
+    }
+}
+admin@ncs(config-shared-route-policy-alwaysoniosxr/33:33)# commit
+Commit complete.
+'''
+
+Also when we delete a service the policy is adjusted appropriately
+'''
+admin@ncs(config-shared-route-policy-alwaysoniosxr/33:33)# top
+admin@ncs(config)# no shared-route-policy alwaysoniosxr 11:11
+admin@ncs(config)# commit dry-run outformat native
+native {
+    device {
+        name alwaysoniosxr
+        data route-policy VRF-shared-1-EXP-RPL
+               if community matches-any (33:33) then
+                 set extcommunity rt (44:44) additive
+               endif
+              end-policy
+             !
+    }
+}
+admin@ncs(config)# commit
+Commit complete.
 ```
-This produces a route policy like this
-```
-RP/0/RP0/CPU0:XR_SANDBOX#show running-config route-policy VRF-shared-1-EXP-RPL
-Wed Oct  9 14:15:34.202 UTC
-route-policy VRF-shared-1-EXP-RPL
-  if community matches-any (123:456) then
-    set extcommunity rt (333:444) additive
-  endif
-  if community matches-any (2:2) then
-    set extcommunity rt (3:3) additive
-  endif
-end-policy
-!
-```
-So if we look at this service in xml form
-```
-admin@ncs(config)# show full-configuration shared-route-policy | display xml
-<config xmlns="http://tail-f.com/ns/config/1.0">
-  <shared-route-policy xmlns="http://example.com/shared-route-policy">
-    <device>alwaysoniosxr</device>
-    <match-set>
-      <match>123:456</match>
-      <set>333:444</set>
-    </match-set>
-    <match-set>
-      <match>2:2</match>
-      <set>3:3</set>
-    </match-set>
-  </shared-route-policy>
-</config>
-```
-Any service can create its own match-set within its templates and as long as the match keys differ, then the services will not overwrite each other.
-You can of course use `<match-set tags='create'>` to ensure that you are creating a new match and not overwriting an existing one.
