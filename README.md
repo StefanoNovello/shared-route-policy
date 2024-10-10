@@ -23,9 +23,9 @@ native {
 }
 admin@ncs(config-shared-route-policy-alwaysoniosxr/11:11)# commit
 Commit complete.
-'''
+```
 Then if we add a second service we see how the policy is concatenated, and we see how it has added an extra 'chunk' into the existing basic-shared-policy
-'''
+```
 admin@ncs(config-shared-route-policy-alwaysoniosxr/11:11)# shared-route-policy alwaysoniosxr 33:33 set 44:44
 admin@ncs(config-shared-route-policy-alwaysoniosxr/33:33)# commit dry-run
 cli {
@@ -67,10 +67,10 @@ native {
 }
 admin@ncs(config-shared-route-policy-alwaysoniosxr/33:33)# commit
 Commit complete.
-'''
+```
 
 Also when we delete a service the policy is adjusted appropriately
-'''
+```
 admin@ncs(config-shared-route-policy-alwaysoniosxr/33:33)# top
 admin@ncs(config)# no shared-route-policy alwaysoniosxr 11:11
 admin@ncs(config)# commit dry-run outformat native
