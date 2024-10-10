@@ -26,25 +26,23 @@ Commit complete.
 ```
 Then if we add a second service we see how the policy is concatenated, and we see how it has added an extra 'chunk' into the existing basic-shared-policy
 ```
-admin@ncs(config-shared-route-policy-alwaysoniosxr/11:11)# shared-route-policy alwaysoniosxr 33:33 set 44:44
-admin@ncs(config-shared-route-policy-alwaysoniosxr/33:33)# commit dry-run
+admin@ncs(config-shared-route-policy-alwaysoniosxr/33:33)# commit dry
 cli {
     local-node {
-        data +basic-shared-policy alwaysoniosxr VRF-shared-1-EXP-RPL {
+        data  basic-shared-policy alwaysoniosxr VRF-shared-1-EXP-RPL {
+             -    chunk [ "  if community matches-any (11:11) then\r\n    set extcommunity rt (22:22) additive\r\n  endif\r\n" ];
              +    chunk [ "  if community matches-any (11:11) then\r\n    set extcommunity rt (22:22) additive\r\n  endif\r\n" "  if community matches-any (33:33) then\r\n    set extcommunity rt (44:44) additive\r\n  endif\r\n" ];
-             +}
-             +shared-route-policy alwaysoniosxr 11:11 {
-             +    set 22:22;
-             +}
+              }
              +shared-route-policy alwaysoniosxr 33:33 {
              +    set 44:44;
              +}
               devices {
                   device alwaysoniosxr {
                       config {
-             +            route-policy VRF-shared-1-EXP-RPL {
+                          route-policy VRF-shared-1-EXP-RPL {
+             -                value "  if community matches-any (11:11) then\r\n    set extcommunity rt (22:22) additive\r\n  endif\r\n";
              +                value "  if community matches-any (11:11) then\r\n    set extcommunity rt (22:22) additive\r\n  endif\r\n  if community matches-any (33:33) then\r\n    set extcommunity rt (44:44) additive\r\n  endif\r\n";
-             +            }
+                          }
                       }
                   }
               }
@@ -83,6 +81,16 @@ native {
                endif
               end-policy
              !
+    }
+}
+admin@ncs(config)# commit
+Commit complete.
+admin@ncs(config)# no shared-route-policy alwaysoniosxr 33:33
+admin@ncs(config)# commit dry-run outformat native
+native {
+    device {
+        name alwaysoniosxr
+        data no route-policy VRF-shared-1-EXP-RPL
     }
 }
 admin@ncs(config)# commit
