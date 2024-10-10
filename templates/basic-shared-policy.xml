@@ -1,0 +1,13 @@
+<config-template xmlns="http://tail-f.com/ns/config/1.0" servicepoint='basic-shared-route-policy-servicepoint'>
+    <devices xmlns="http://tail-f.com/ns/ncs">
+        <device>
+          <name>{/device}</name>
+          <config>
+            <route-policy xmlns="http://tail-f.com/ned/cisco-ios-xr">
+              <name>{/policy}</name>
+              <value>{/chunk}</value>
+            </route-policy>
+          </config>
+        </device>
+      </devices>
+</config-template>

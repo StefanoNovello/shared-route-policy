@@ -1,13 +1,6 @@
 <ncs-package xmlns="http://tail-f.com/ns/ncs-packages">
   <name>shared-route-policy</name>
   <package-version>1.0</package-version>
-  <description>Generated Python package</description>
+  <description>Shared route policy</description>
   <ncs-min-version>6.3</ncs-min-version>
-
-  <component>
-    <name>main</name>
-    <application>
-      <python-class-name>shared_route_policy.main.Main</python-class-name>
-    </application>
-  </component>
 </ncs-package>
