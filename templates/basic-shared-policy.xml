@@ -5,6 +5,9 @@
           <config>
             <route-policy xmlns="http://tail-f.com/ned/cisco-ios-xr">
               <name>{/policy}</name>
+              <!-- When you have an xpath to a leaf-list (/chunk) the result is the 
+               string concatenation of all leaf list values.
+               -->
               <value>{/chunk}</value>
             </route-policy>
           </config>
